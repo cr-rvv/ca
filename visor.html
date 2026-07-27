@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Análisis 3D - Ladybug</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #f2f2f2;
+      overflow: hidden;
+    }
+    model-viewer {
+      width: 100%;
+      height: 100vh;
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    IMPORTANTE:
+    Cambia "modelo.glb" por el nombre EXACTO de tu archivo .glb
+    y asegúrate de que esté en la MISMA carpeta que este archivo HTML
+    antes de subir/arrastrar todo junto a Netlify Drop.
+  -->
+  <model-viewer
+    src="modelo.glb"
+    alt="Análisis de radiación solar - modelo baked de Ladybug"
+    camera-controls
+    auto-rotate
+    shadow-intensity="1"
+    exposure="1"
+    environment-image="neutral"
+    ar
+  ></model-viewer>
+
+</body>
+</html>
