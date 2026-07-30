@@ -120,7 +120,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
    ============================================================ */
 
 // Nombre del archivo .glb (debe estar en la misma carpeta que este HTML)
-const MODEL_URL = "modelo.glb";
+const MODEL_URL = "materiales.glb";
 
 // Lista de materiales para la leyenda.
 // "match" es el texto que debe contener el nombre del material en el .glb
@@ -128,8 +128,8 @@ const MODEL_URL = "modelo.glb";
 // tus materiales reales en Rhino/Blender, ej: "MAT_Tierra", "Tierra", etc.
 const MATERIALS_CONFIG = [
   { label: "Tierra",        match: "tierra",       iconColor: "#8B5E34" },
-  { label: "Estuco",        match: "estuco",       iconColor: "#D9CBB5" },
-  { label: "Mampostería",   match: "mamposteria",  iconColor: "#A6543C" }, // sin tilde para comparar
+  { label: "Estuco",        match: "StuccoB",       iconColor: "#D9CBB5" },
+  { label: "Mampostería",   match: "slate",  iconColor: "#A6543C" }, // sin tilde para comparar
   { label: "Metal",         match: "metal",        iconColor: "#B3B7BC" },
 ];
 
