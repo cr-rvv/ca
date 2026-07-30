@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <title>Análisis 3D - Materiales</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- CARGA DE LA FUENTE MONTSERRAT DESDE GOOGLE FONTS -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
 <style>
   html, body {
     margin: 0;
@@ -14,6 +20,12 @@
     overflow: hidden;
     font-family: "Montserrat", sans-serif !important;
   }
+  
+  /* Asegura que todos los elementos hereden la fuente */
+  *, button, input, select, textarea {
+    font-family: "Montserrat", sans-serif !important;
+  }
+
   #viewer-container {
     position: relative;
     width: 100%;
@@ -123,13 +135,10 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 const MODEL_URL = "materiales.glb";
 
 // Lista de materiales para la leyenda.
-// "match" es el texto que debe contener el nombre del material en el .glb
-// (no distingue mayúsculas/minúsculas). Ajusta "match" a como se llamen
-// tus materiales reales en Rhino/Blender, ej: "MAT_Tierra", "Tierra", etc.
 const MATERIALS_CONFIG = [
   { label: "Tierra",        match: "tierra",       iconColor: "#8B5E34" },
-  { label: "Estuco",        match: "StuccoB",       iconColor: "#D9CBB5" },
-  { label: "Mampostería",   match: "slate",  iconColor: "#A6543C" }, // sin tilde para comparar
+  { label: "Estuco",        match: "StuccoB",      iconColor: "#D9CBB5" },
+  { label: "Mampostería",   match: "slate",        iconColor: "#A6543C" },
   { label: "Metal",         match: "metal",        iconColor: "#B3B7BC" },
 ];
 
@@ -137,12 +146,6 @@ const MATERIALS_CONFIG = [
 const GHOST_COLOR = 0xffffff;
 const GHOST_OPACITY = 0.15;
 
-// Ángulo inicial de la cámara al abrir el visor.
-// AZIMUTH: gira la cámara alrededor del modelo (como si caminaras en círculo
-//   alrededor de él). 0 = vista por defecto actual. Prueba 180 si el modelo
-//   se ve "de espaldas". Si 180 tampoco es el frente exacto, prueba 90 o -90.
-// ELEVATION: qué tan "de arriba" ves el modelo. 0 = a la altura de los ojos,
-//   valores más altos = más picado desde arriba.
 const INITIAL_CAMERA_AZIMUTH_DEG = 180;
 const INITIAL_CAMERA_ELEVATION_DEG = 20;
 
@@ -174,7 +177,6 @@ container.appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 
-// Luces básicas (ajusta a tu gusto si tu modelo no trae luces propias)
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
 scene.add(hemiLight);
 
@@ -193,14 +195,9 @@ window.addEventListener("resize", () => {
    CARGA DEL MODELO Y GUARDADO DE MATERIALES ORIGINALES
    ============================================================ */
 
-// Guardamos aquí el estado original de cada material para poder restaurarlo
-// key: material.uuid -> { color, opacity, transparent }
 const originalMaterialState = new Map();
-
-// Todas las mallas del modelo, para poder recorrerlas al hacer clic
 let allMeshes = [];
-
-let activeMatch = null; // texto del material actualmente seleccionado (o null = todos normales)
+let activeMatch = null;
 
 const loader = new GLTFLoader();
 
@@ -216,7 +213,6 @@ loader.load(
         child.receiveShadow = true;
         allMeshes.push(child);
 
-        // Un mesh puede tener uno o varios materiales (array)
         const mats = Array.isArray(child.material) ? child.material : [child.material];
         mats.forEach((mat) => {
           if (!mat || originalMaterialState.has(mat.uuid)) return;
@@ -229,16 +225,8 @@ loader.load(
       }
     });
 
-    // Centrar y encuadrar cámara automáticamente según el tamaño del modelo
     fitCameraToObject(model);
-
     loadingEl.style.display = "none";
-
-    // --- DIAGNÓSTICO ---
-    // Descomenta la siguiente línea (quita las dos barras //) para ver en la
-    // consola del navegador (F12 > Console) los nombres reales de material
-    // que trae tu .glb. Útil si algún material no se resalta correctamente.
-    // console.log("Materiales encontrados:", allMeshes.flatMap(m => Array.isArray(m.material) ? m.material : [m.material]).map(mat => mat?.name));
   },
   undefined,
   (error) => {
@@ -255,7 +243,6 @@ function fitCameraToObject(object) {
   const maxDim = Math.max(size.x, size.y, size.z);
   const fitDist = maxDim / (2 * Math.tan((Math.PI * camera.fov) / 360));
 
-  // Convertimos azimuth/elevación (grados) a una posición alrededor del centro
   const azimuth = THREE.MathUtils.degToRad(INITIAL_CAMERA_AZIMUTH_DEG);
   const elevation = THREE.MathUtils.degToRad(INITIAL_CAMERA_ELEVATION_DEG);
 
@@ -278,7 +265,6 @@ function fitCameraToObject(object) {
    ============================================================ */
 
 function normalizeText(text) {
-  // Quita acentos/tildes para que "Mampostería" y "mamposteria" se comparen igual
   return text
     .toLowerCase()
     .normalize("NFD")
@@ -291,7 +277,7 @@ function materialMatches(material, matchText) {
 }
 
 function applyHighlight(matchText) {
-  activeMatch = matchText; // null si se deselecciona (mostrar todo normal)
+  activeMatch = matchText;
 
   allMeshes.forEach((mesh) => {
     const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -303,12 +289,10 @@ function applyHighlight(matchText) {
       const isSelected = matchText === null || materialMatches(mat, matchText);
 
       if (isSelected) {
-        // Restaurar apariencia original
         if (mat.color && original.color) mat.color.copy(original.color);
         mat.opacity = original.opacity;
         mat.transparent = original.transparent;
       } else {
-        // Estado fantasma: translúcido y blanquecino
         if (mat.color) mat.color.setHex(GHOST_COLOR);
         mat.transparent = true;
         mat.opacity = GHOST_OPACITY;
@@ -333,11 +317,9 @@ MATERIALS_CONFIG.forEach((cfg) => {
   btn.addEventListener("click", () => {
     const isAlreadyActive = btn.classList.contains("active");
 
-    // Quitar estado activo de todos los botones
     buttons.forEach((b) => b.classList.remove("active"));
 
     if (isAlreadyActive) {
-      // Clic sobre el ya activo -> deseleccionar, mostrar todo normal
       applyHighlight(null);
     } else {
       btn.classList.add("active");
