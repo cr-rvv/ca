@@ -52,6 +52,7 @@
     margin-bottom: 2px;
   }
   .legend-item {
+    font-family: 'Montserrat', -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -144,6 +145,13 @@ const MATERIALS_CONFIG = [
 const GHOST_COLOR = 0xffffff;
 const GHOST_OPACITY = 0.15;
 
+// Rotación de la vista inicial, en grados, alrededor del modelo (como
+// caminar en círculo a su alrededor mirando siempre al centro). El zoom
+// y la altura de vista NO cambian, solo el lado desde el que ves el modelo.
+// Prueba distintos valores (90, 180, 270, -90, etc.) hasta encontrar el
+// lado correcto.
+const INITIAL_VIEW_ROTATION_DEG = 90;
+
 /* ============================================================
    ESCENA BASE
    ============================================================ */
@@ -155,7 +163,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);
 
 const camera = new THREE.PerspectiveCamera(
-  90,
+  45,
   container.clientWidth / container.clientHeight,
   0.01,
   1000
@@ -247,10 +255,16 @@ function fitCameraToObject(object) {
   const maxDim = Math.max(size.x, size.y, size.z);
   const fitDist = maxDim / (2 * Math.tan((Math.PI * camera.fov) / 360));
 
-  // Vista inicial rotada 180° respecto a la que había antes (signos invertidos
-  // en X y Z). Si no queda exactamente de frente, prueba invertir solo uno de
-  // los dos signos (por ejemplo dejar +center.x y solo invertir center.z).
-  camera.position.set(center.x - fitDist, center.y + fitDist * 0.6, center.z - fitDist);
+  // Vista inicial: mismo "zoom" (radio y altura) que antes, pero girando
+  // alrededor del modelo según INITIAL_VIEW_ROTATION_DEG. El ángulo base de
+  // 45° corresponde a la vista original (esquina X+/Z+); el valor de rotación
+  // se suma a partir de ahí.
+  const radius = fitDist * Math.SQRT2;
+  const angle = THREE.MathUtils.degToRad(45 + INITIAL_VIEW_ROTATION_DEG);
+  const offsetX = radius * Math.sin(angle);
+  const offsetZ = radius * Math.cos(angle);
+
+  camera.position.set(center.x + offsetX, center.y + fitDist * 0.6, center.z + offsetZ);
   camera.near = fitDist / 100;
   camera.far = fitDist * 100;
   camera.updateProjectionMatrix();
